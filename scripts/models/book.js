@@ -1,24 +1,58 @@
 'use strict';
 
-// var app = {};
+var app = {};
 
-// const ENV = {};
+const ENV = {};
+
+ENV.isProduction = window.location.protocol === 'https:';
+ENV.productionAPIUrl = 'https://git.heroku.com/bh-mb-booklist.git';
+ENV.developmentApiUrl = 'http://localhost:3000';
+ENV.apiUrl = ENV.isProduction ? ENV.productionAPIUrl : ENV.developmentApiUrl;
 
 
-// ENV.isProduction = window.location.protocol === 'https:';
-// ENV.productionAPIUrl = 'https://git.heroku.com/bh-mb-booklist.git';
-// ENV.developmentApiUrl = 'http://localhost:3000';
-// ENV.apiUrl = ENV.isProduction ? ENV.productionAPIUrl : ENV.developmentApiUrl;
+(function (module) {
 
-// bookData = [];
+  function Book(obj) {
+    Object.assign(this, obj);
+  }
 
-let getData = () => {
-  $.get('/api/v1/tasks')
-    .then(results => {
-      let bookData = results;
-      console.log(bookData);
+  Book.all = [];
 
-    })
-};
+  Book.prototype.toHtml = function () {
+    let template = Handlebars.compile($('#book-template').text());
+    return template(this);
 
-getData();
+  };
+
+  Book.prototype.detailToHtml = function () {
+    let template = Handlebars.compile($('#book-detail-template').text());
+    return template(this);
+  };
+
+  Book.loadAll = rows => {
+    Book.all = rows.map(book => new Book(book));
+    console.log(Book.all);
+  };
+
+  // callback is going to be: app.booksView.initIndexPage
+  Book.fetchAll = callback => {
+    $.get(`${ENV.apiUrl}/api/v1/books`)
+      .then(Book.loadAll)
+      .then(callback)
+      .catch(errorCallback);
+  };
+
+  Book.add = book => {
+    $.post(`${ENV.apiUrl}/books/add`, book)
+      .then(() => page('/'))
+      .catch(errorCallback);
+  };
+
+  function errorCallback(err) {
+    console.error(err);
+    module.errorView.initErrorPage(err);
+  }
+
+  module.Book = Book;
+
+})(app);
