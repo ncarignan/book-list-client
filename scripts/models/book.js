@@ -2,7 +2,7 @@
 
 var app = {};
 
-const ENV = {} || 'http://localhost:3000';
+const ENV = {};
 
 ENV.isProduction = window.location.protocol === 'https:';
 ENV.productionAPIUrl = 'https://git.heroku.com/bh-mb-booklist.git';
